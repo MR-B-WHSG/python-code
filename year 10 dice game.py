@@ -25,6 +25,7 @@ def play_round():
     print(f"Player 1 rolled {p1_die1} and {p1_die2} -> Round points: {p1_points}")
     print(f"Player 2 rolled {p2_die1} and {p2_die2} -> Round points: {p2_points}")
 
+
     return p1_points, p2_points
 
 def play_game(rounds=5):
@@ -39,6 +40,7 @@ def play_game(rounds=5):
         p2_total_score += p2_points
 
         print(f"Current Scores -> Player 1: {p1_total_score}, Player 2: {p2_total_score}")
+        input()
 
     # Determine the winner or tie-breaker
     if p1_total_score > p2_total_score:
