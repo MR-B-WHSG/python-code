@@ -353,7 +353,7 @@ class App:
             self.draw_endgame()
 
     def draw_menu(self):
-        t= FONT.render("Shithead - Main Menu",True,WHITE)
+        t= FONT.render("Shead - Main Menu",True,WHITE)
         self.screen.blit(t,(300,100))
         self.draw_button(300,200,200,40,"Play")
         self.draw_button(300,260,200,40,"Options")
