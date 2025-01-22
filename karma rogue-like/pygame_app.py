@@ -1,6 +1,6 @@
 # pygame_app.py
 """
-A PyGame front end for your Shithead card game with:
+A PyGame front end for your maroon card game with:
  1) Dynamic row for the human's 'active' zone (hand or face-up).
  2) Forced random flip from face-down only when hand + face-up are empty.
  3) If a flipped face-down is unplayable, it goes into your hand,
@@ -103,7 +103,7 @@ def load_card_images():
 class App:
     def __init__(self):
         self.screen= pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
-        pygame.display.set_caption("Shithead - Merged Hand UI + Forced FaceDown")
+        pygame.display.set_caption("maroon - Merged Hand UI + Forced FaceDown")
         self.clock= pygame.time.Clock()
 
         self.state= STATE_MAIN_MENU
@@ -273,9 +273,9 @@ class App:
             if len(self.players)==1:
                 lastp= self.players[0]
                 if lastp.name=="You":
-                    self.msg_log="You're last => Typically means you lose in Shithead, or you can call it a 'win'."
+                    self.msg_log="You're last => Typically means you lose in maroon, or you can call it a 'win'."
                 else:
-                    self.msg_log=f"{lastp.name} is last => Shithead tradition => they're the Shithead!"
+                    self.msg_log=f"{lastp.name} is last => maroon tradition => they're the maroon!"
                 self.game_in_progress=False
 
     def handle_human_turn_if_needed(self, cp):
@@ -336,7 +336,7 @@ class App:
             self.draw_gameplay()
 
     def draw_menu(self):
-        t= FONT.render("Shithead - Main Menu", True,WHITE)
+        t= FONT.render("Maroon - Main Menu", True,WHITE)
         self.screen.blit(t,(300,100))
         self.draw_button(300,200,200,40,"Play")
         self.draw_button(300,260,200,40,"Options")

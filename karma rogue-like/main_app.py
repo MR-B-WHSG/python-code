@@ -102,7 +102,7 @@ def load_card_images():
 class App:
     def __init__(self):
         self.screen= pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
-        pygame.display.set_caption("Mr B's Awesome Card Game")
+        pygame.display.set_caption("Mr B's Awesome Card Game Of Fun")
         self.clock= pygame.time.Clock()
 
         self.state= STATE_MAIN_MENU
@@ -353,7 +353,7 @@ class App:
             self.draw_endgame()
 
     def draw_menu(self):
-        t= FONT.render("Shithead - Main Menu",True,WHITE)
+        t= FONT.render("Shead - Main Menu",True,WHITE)
         self.screen.blit(t,(300,100))
         self.draw_button(300,200,200,40,"Play")
         self.draw_button(300,260,200,40,"Options")
