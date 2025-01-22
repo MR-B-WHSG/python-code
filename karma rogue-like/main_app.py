@@ -1,6 +1,6 @@
 # main_app.py
 """
-Main PyGame app for Shead, referencing setup.py for game creation.
+Main PyGame app for Maroon, referencing setup.py for game creation.
 End-of-game:
  - Display scoreboard & finishing order
  - Ask user if they want to play again or return to main menu
@@ -353,7 +353,7 @@ class App:
             self.draw_endgame()
 
     def draw_menu(self):
-        t= FONT.render("Shead - Main Menu",True,WHITE)
+        t= FONT.render("Maroon - Main Menu",True,WHITE)
         self.screen.blit(t,(300,100))
         self.draw_button(300,200,200,40,"Play")
         self.draw_button(300,260,200,40,"Options")
