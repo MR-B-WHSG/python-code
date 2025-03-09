@@ -66,6 +66,7 @@ def tie_breaker(p1_score, p2_score):
         else:
             print("It's another tie! Rolling again...")
 
-if __name__ == "__main__":
+game = True
+while game:
     print("Welcome to the Two-Player Dice Game!")
     play_game()
