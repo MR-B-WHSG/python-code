@@ -25,12 +25,12 @@ DRAWING_AREA_HEIGHT = WINDOW_HEIGHT - TOP_PANEL_HEIGHT - LOG_PANEL_HEIGHT
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 LIGHT_GRAY = (200, 200, 200)
-RED = (255, 0, 0)  # Closed set in A*
-GREEN = (0, 255, 0)  # Final path highlight
-BLUE = (0, 0, 255)  # Start node
-ORANGE = (255, 165, 0)  # Goal node
-LIGHT_BLUE = (173, 216, 230)  # Open set in A*
-YELLOW = (255, 255, 0)  # Current node
+RED = (255, 0, 0)           # Closed set in A*
+GREEN = (0, 255, 0)         # Final path highlight
+BLUE = (0, 0, 255)          # Start node
+ORANGE = (255, 165, 0)      # Goal node
+LIGHT_BLUE = (173, 216, 230)# Open set in A*
+YELLOW = (255, 255, 0)      # Current node
 DARK_GRAY = (100, 100, 100)
 
 # Speed of A* visualization (frames per second)
@@ -39,9 +39,9 @@ ANIMATION_SPEED = 5
 # --------------------------
 # Global Variables for Graph and UI
 # --------------------------
-nodes = []  # List of Node objects
-edges = []  # List of Edge objects
-buttons = []  # List of UI Button objects
+nodes = []       # List of Node objects
+edges = []       # List of Edge objects
+buttons = []     # List of UI Button objects
 log_messages = []  # Log panel messages
 
 final_path = None  # Will hold the final A* path once computed
@@ -90,6 +90,23 @@ def manhattan(p1, p2):
     return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
 
+def update_all_values():
+    """
+    Recalculate values for all nodes and default edges.
+    For each node, if a goal is set, update its heuristic (h) using Manhattan distance.
+    If the node already has a g value, update f = g + h.
+    For each edge with default cost, update its cost based on the current positions.
+    """
+    if goal_node is not None:
+        for node in nodes:
+            node.h = manhattan(node.pos, goal_node.pos)
+            if node.g is not None:
+                node.f = node.g + node.h
+    for edge in edges:
+        if edge.default:
+            edge.cost = manhattan(edge.node1.pos, edge.node2.pos)
+
+
 # --------------------------
 # Classes for Graph Elements and UI
 # --------------------------
@@ -126,7 +143,6 @@ class Node:
         surface.blit(label, label_rect)
 
         # Draw cost values (g and h) near the node
-        # Display g above and h below the node
         if self.g is not None:
             g_text = FONT.render(f"g:{self.g}", True, BLACK)
             surface.blit(g_text, (self.pos[0] - self.radius, self.pos[1] - self.radius - 20))
@@ -149,13 +165,20 @@ class Edge:
     def __init__(self, node1, node2, cost=None):
         self.node1 = node1
         self.node2 = node2
-        # Default cost is Manhattan distance between node centers if not specified
-        self.cost = cost if cost is not None else manhattan(node1.pos, node2.pos)
+        # If cost is not provided, use Manhattan distance and mark as default.
+        if cost is None:
+            self.cost = manhattan(node1.pos, node2.pos)
+            self.default = True
+        else:
+            self.cost = cost
+            self.default = False
 
     def draw(self, surface):
         """Draw the edge as a line between node1 and node2 with cost label at the midpoint."""
+        # If this is a default edge, update its cost based on current positions.
+        if self.default:
+            self.cost = manhattan(self.node1.pos, self.node2.pos)
         pygame.draw.line(surface, BLACK, self.node1.pos, self.node2.pos, 2)
-        # Determine midpoint
         mid_x = (self.node1.pos[0] + self.node2.pos[0]) // 2
         mid_y = (self.node1.pos[1] + self.node2.pos[1]) // 2
         cost_text = FONT.render(str(self.cost), True, BLACK)
@@ -258,20 +281,17 @@ def astar_search(start, goal, update_callback=None):
     start.f = start.h  # f = g + h
 
     heapq.heappush(open_list, (start.f, start.id, start))
-    log_decision(
-        f"Starting A* search from node {start.id} to node {goal.id}. The algorithm will explore nodes to determine the lowest cost path.")
+    log_decision(f"Starting A* search from node {start.id} to node {goal.id}. The algorithm will explore nodes to determine the lowest cost path.")
 
     while open_list:
         current = heapq.heappop(open_list)[2]
-        log_decision(
-            f"Processing node {current.id}: f = {current.f} (total estimated cost = g + h), where g = {current.g} (cost from start) and h = {current.h} (heuristic estimated cost to goal).")
+        log_decision(f"Processing node {current.id}: f = {current.f} (total estimated cost = g + h), where g = {current.g} and h = {current.h}.")
 
         if update_callback:
             update_callback(current, open_list, closed_set)
 
         if current == goal:
-            log_decision(
-                f"Goal reached at node {current.id}: reconstructing path by backtracking through parent nodes.")
+            log_decision(f"Goal reached at node {current.id}: reconstructing path.")
             path = []
             while current:
                 path.append(current)
@@ -291,14 +311,12 @@ def astar_search(start, goal, update_callback=None):
                 neighbor.g = tentative_g
                 neighbor.h = manhattan(neighbor.pos, goal.pos)
                 neighbor.f = neighbor.g + neighbor.h
-                log_decision(
-                    f"Updating neighbor node {neighbor.id}: new g = {neighbor.g}, h = {neighbor.h}, f = {neighbor.f}. This node will be added to the open set for future evaluation.")
+                log_decision(f"Updating neighbor node {neighbor.id}: new g = {neighbor.g}, h = {neighbor.h}, f = {neighbor.f}.")
                 heapq.heappush(open_list, (neighbor.f, neighbor.id, neighbor))
             else:
-                log_decision(
-                    f"Skipping neighbor node {neighbor.id}: existing path has lower cost (g = {neighbor.g}) than tentative g = {tentative_g}.")
+                log_decision(f"Skipping neighbor node {neighbor.id}: existing path has lower cost (g = {neighbor.g}) than tentative g = {tentative_g}.")
 
-    log_decision("No path found: the algorithm was unable to find a viable route from the start to the goal.")
+    log_decision("No path found: the algorithm could not find a viable route.")
     return None
 
 
@@ -308,9 +326,9 @@ def astar_search(start, goal, update_callback=None):
 def setup_buttons():
     """Create buttons for different modes and actions."""
     global buttons
-    buttons = []  # Clear existing buttons
+    buttons = []
     margin = 5
-    btn_width = 80  # Reduced button width to free space for mode label
+    btn_width = 80  # Reduced width to free space for mode label
     btn_height = TOP_PANEL_HEIGHT - 2 * margin
     x = margin
     buttons.append(Button((x, margin, btn_width, btn_height), "Add Node", "add_node"))
@@ -344,7 +362,7 @@ def draw_top_panel():
     pygame.draw.rect(screen, LIGHT_GRAY, top_rect)
     for btn in buttons:
         btn.draw(screen)
-    # Position the mode label to the right of the buttons (adjust x as needed)
+    # Position the mode label to the right of the buttons.
     mode_text = FONT.render(f"Mode: {current_mode}", True, BLACK)
     screen.blit(mode_text, (770, 10))
 
@@ -359,13 +377,11 @@ def draw_drawing_area():
     for y in range(TOP_PANEL_HEIGHT, TOP_PANEL_HEIGHT + DRAWING_AREA_HEIGHT, grid_spacing):
         pygame.draw.line(screen, LIGHT_GRAY, (0, y), (WINDOW_WIDTH, y))
 
-    # Draw edges and nodes
     for edge in edges:
         edge.draw(screen)
     for node in nodes:
         node.draw(screen)
 
-    # Highlight the final path if it exists by drawing a thick green line connecting nodes.
     if final_path is not None and len(final_path) > 1:
         for i in range(len(final_path) - 1):
             start_pos = final_path[i].pos
@@ -401,7 +417,6 @@ def main_loop():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                # Check top panel for button clicks
                 if pos[1] < TOP_PANEL_HEIGHT:
                     for btn in buttons:
                         if btn.is_clicked(pos):
@@ -412,14 +427,14 @@ def main_loop():
                                 goal_node = None
                                 final_path = None
                                 log_messages.clear()
-                                log_decision("Graph reset: all nodes and edges have been cleared.")
+                                log_decision("Graph reset: all nodes and edges cleared.")
                             elif btn.mode == "run_astar":
                                 if start_node is None or goal_node is None:
-                                    log_decision("Error: Please select both start and goal nodes before running A*.")
+                                    log_decision("Error: Select both start and goal nodes before running A*.")
                                 else:
                                     log_decision("Running A* algorithm...")
                                     astar_path = astar_search(start_node, goal_node, update_callback=astar_update)
-                                    final_path = astar_path  # Save the final path for highlighting
+                                    final_path = astar_path
                                     if final_path:
                                         log_decision("A* algorithm completed: path found.")
                                     else:
@@ -429,23 +444,21 @@ def main_loop():
                             break
                     continue
 
-                # Process clicks in the drawing area
                 if current_mode == "add_node":
                     new_node = Node((pos[0], pos[1]))
                     nodes.append(new_node)
-                    log_decision(f"Added node {new_node.id} at position {new_node.pos}.")
+                    log_decision(f"Added node {new_node.id} at {new_node.pos}.")
                 elif current_mode == "add_edge":
                     for node in nodes:
                         if node.is_clicked(pos):
                             if edge_start_node is None:
                                 edge_start_node = node
-                                log_decision(f"Selected node {node.id} as the starting node for a new edge.")
+                                log_decision(f"Selected node {node.id} as start for new edge.")
                             else:
                                 if node != edge_start_node:
                                     new_edge = Edge(edge_start_node, node)
                                     edges.append(new_edge)
-                                    log_decision(
-                                        f"Created edge between node {edge_start_node.id} and node {node.id} with default cost {new_edge.cost}.")
+                                    log_decision(f"Created edge between node {edge_start_node.id} and node {node.id} with cost {new_edge.cost}.")
                                     edge_start_node = None
                             break
                 elif current_mode == "delete":
@@ -471,23 +484,20 @@ def main_loop():
                     for node in nodes:
                         if node.is_clicked(pos):
                             if pos[1] < node.pos[1]:
-                                new_val = popup_edit_value(node.g if node.g is not None else 0,
-                                                           prompt=f"Enter new g for node {node.id}:")
+                                new_val = popup_edit_value(node.g if node.g is not None else 0, prompt=f"Enter new g for node {node.id}:")
                                 node.g = new_val
                                 log_decision(f"Updated node {node.id} g value to {node.g}.")
                             else:
-                                new_val = popup_edit_value(node.h if node.h is not None else 0,
-                                                           prompt=f"Enter new h for node {node.id}:")
+                                new_val = popup_edit_value(node.h if node.h is not None else 0, prompt=f"Enter new h for node {node.id}:")
                                 node.h = new_val
                                 log_decision(f"Updated node {node.id} h value to {node.h}.")
                             break
                     for edge in edges:
                         if edge.is_clicked(pos):
-                            new_cost = popup_edit_value(edge.cost,
-                                                        prompt=f"Enter new cost for edge between {edge.node1.id} and {edge.node2.id}:")
+                            new_cost = popup_edit_value(edge.cost, prompt=f"Enter new cost for edge between {edge.node1.id} and {edge.node2.id}:")
                             edge.cost = new_cost
-                            log_decision(
-                                f"Updated cost for edge between node {edge.node1.id} and node {edge.node2.id} to {edge.cost}.")
+                            edge.default = False
+                            log_decision(f"Updated cost for edge between node {edge.node1.id} and node {edge.node2.id} to {edge.cost}.")
                             break
                 elif current_mode == "select_start":
                     for node in nodes:
@@ -520,6 +530,8 @@ def main_loop():
                     new_x = max(dragging_node.radius, new_x)
                     new_x = min(WINDOW_WIDTH - dragging_node.radius, new_x)
                     dragging_node.pos = (new_x, new_y)
+                    # Recalculate heuristic and default edge costs for all nodes and edges
+                    update_all_values()
 
         screen.fill(WHITE)
         draw_top_panel()
